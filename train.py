@@ -11,6 +11,8 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
 
 
+
+
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
@@ -101,13 +103,13 @@ dtypes = {
 
 print("Reading dataset..")
 
-df = pd.read_csv('./ddos_balanced/final_dataset.csv',
-     dtype=dtypes,
-     parse_dates=['Timestamp'],
-     usecols=[*dtypes.keys(), 'Timestamp'],
-     engine='c',
-     low_memory=True
-     )
+df = pd.read_csv(r'C:\Users\anhad\OneDrive\python\Major_model\ddosAttackDetection\final_dataset.csv', nrows = 10000000,
+        dtype=dtypes,
+        parse_dates=['Timestamp'],
+        usecols=[*dtypes.keys(), 'Timestamp'],
+        engine='c',
+        low_memory=True
+        )
 
 print("Dataset was successfully read.")
 
@@ -151,7 +153,7 @@ def train_model(df):
     x = df.loc[:,features]
     y = df.loc[:,target]
 
-    print("Wich model you want to use: ")
+    print("Which model you want to use: ")
     print("0 - DecisionTreeClassifier")
     print("1 - GaussianNB")
     print("2 - RandomForest")
@@ -169,11 +171,11 @@ def train_model(df):
         modelname = "GaussianNB"
     elif (str(choice) == "2"):
         from sklearn.ensemble import RandomForestClassifier
-        model = RandomForestClassifier()
+        model = RandomForestClassifier(n_estimators=50, max_depth=10, max_features='sqrt', random_state=42)
         modelname = "RandomForest" 
     elif (str(choice) == "3"):
         from sklearn.neural_network import MLPClassifier
-        model = MLPClassifier()
+        model = MLPClassifier(hidden_layer_sizes=(50,), learning_rate_init=0.01, batch_size=64, max_iter=200, random_state=42)
         modelname = "MLP"
     else:
         print("You picked an invalid option. Using default model 0 to training.")
@@ -182,7 +184,7 @@ def train_model(df):
     print("Option valid. \n")
     sizeTrain = input("What's the size from the dataset you want to train? (between 0 and 100): ")
     
-    print("Fitting model..")
+    print("Starting to fit the model...")
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=42, test_size=1.0-float(sizeTrain)/100)   
 
@@ -205,16 +207,30 @@ def train_model(df):
     #Getting results
     y_pred = model.predict(x_test)
     score = accuracy_score(y_test, y_pred)*100
-    print("Accuracy of the model "+modelname+" is: ", score) 
-    precision = precision_score(y_test, y_pred, pos_label='Benign')*100
+    
+    # Assuming y_test and y_pred are defined
+
+    # Calculate confusion matrix with labels parameter
+    labels = ['Benign', 'ddos']
+    matrix = confusion_matrix(y_test, y_pred, labels=labels)
+
+    
+
+    # Calculate accuracy
+    accuracy = accuracy_score(y_test, y_pred)*100
+    print("Accuracy of the model "+modelname+" is: ", accuracy)
+
+    # Calculate precision, recall, and F1 score with zero_division parameter
+    precision = precision_score(y_test, y_pred, pos_label='Benign', zero_division=0)*100
     print("Precision of the model "+modelname+" is: ", precision) 
-    recall = recall_score(y_test, y_pred, pos_label='Benign')*100
-    print("Recall of the model "+modelname+ " is: ", recall)
-    f1 = f1_score(y_test, y_pred, pos_label='Benign')*100
-    print("F1 score of the model "+modelname+ " is: ", f1)
-    matrix = confusion_matrix(y_test, y_pred)
+    recall = recall_score(y_test, y_pred, pos_label='Benign', zero_division=0)*100
+    print("Recall of the model "+modelname+" is: ", recall)
+    f1 = f1_score(y_test, y_pred, pos_label='Benign', zero_division=0)*100
+    print("F1 score of the model "+modelname+" is: ", f1)
     print("\nConfusion Matrix:")
-    print( matrix)
+    print(matrix)
+    
+    
 
     #Structure of the matrix
     #[  True Negative   False Positive ]
